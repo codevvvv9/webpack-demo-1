@@ -1,0 +1,38 @@
+.loading{
+    width: 200px;
+    height: 200px;
+    position: relative;
+  }
+  .loading::before, .loading::after{
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    background: black;
+    border: 1px solid black;
+    border-radius: 50%;
+    animation: sildout 2s linear infinite;
+    
+  }
+  .loading::after{
+    animation-delay: 0.8s;
+  }
+  @keyframes sildout{
+    from{
+      width: 0px;
+      height: 0px;
+      opacity: 1;
+    }
+    
+    to{
+      width: 80px;
+      height: 80px;
+      opacity: 0;
+    }
+  }
