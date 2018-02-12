@@ -90,7 +90,7 @@ module: {
 ### V1.0的Commit借助它完成的功能
 在`./src/js/`有三个js文件，都是新的语法，用的模块化写法(两个Module.js的export,以及app.js的import)，有的浏览器不支持，所以需要转化。
 ***
-*最终效果，打开的我的预览链接*,使用`ctrl+shift+J`，会看到打印出1和2
+*最终效果，打开的[我的预览链接](https://codevvvv9.github.io/webpack-demo-1/dist/index.html)*,使用`ctrl+shift+J`，会看到打印出1和2
 ***
 ## 把scss文件变成css并加入到html里面
 思路同上，`google webpack scss`
@@ -129,7 +129,7 @@ npm i --save-dev css-loader style-loader
 ```
 ![style标签](http://p3tha6q4v.bkt.clouddn.com/18-2-11/60086288.jpg)
 ***
-所以，打开我的预览链接，会看到我的预览的背景是灰色的。
+所以，打开[我的预览链接](https://codevvvv9.github.io/webpack-demo-1/dist/index.html)，会看到我的预览的背景是灰色的。
 ***
 ### V1.0的Commit的时候的webpack.config.js最终代码
 ```
@@ -217,7 +217,116 @@ output: {
 },
 ```
 项目的path是`dist/js`下，所以应该复制到上一级目录下`../`也就是`dist/`目录下了。
-### 至此可以看到预览链接里面的文字啦
+### 至此可以看到[预览链接](https://codevvvv9.github.io/webpack-demo-1/dist/index.html)里面的文字啦
 动态效果可以看下图
 ![动态效果](http://p3tha6q4v.bkt.clouddn.com/18-2-12/50816812.jpg)
+## 上一次提交的遗留的小问题
+上一次使用了`display： flex`把`ul>li`变成了横排，但是这玩意有兼容性，可以去[caniuse](https://caniuse.com/#feat=flexbox) 看一下,(*@ο@*) 哇～IE没有绿的哎，支持太差了。( ⊙ o ⊙ )！万一以后我项目搞大了，IE的用户、老安卓的用户想看我项目咋办呢，只能加一下前缀优化一下啦。
+有个挺牛的[在线的autoprefixer](https://autoprefixer.github.io/)，也可以去在线转换。不过既然使用了webpack就`Google webpack autoprefixer`
+遗憾的发现`autoprefixer`官方推荐使用`postcss-loader`
+![autoprefixer过期了](http://p3tha6q4v.bkt.clouddn.com/18-2-12/79391220.jpg)
+### postcss-loader解决兼容性问题
+先吐槽一下，这货的文档也是稀烂……
+1. 官方安装脚本
+
+```
+npm i -D postcss-loader
+```
+2. 需要单独配置文件postcss.config.js，官方的写法是下面这个（最无语的就是这个……，*下面的必错，写出来就是警告大家，官方的也不一定对*）
+
+```
+module.exports = {
+  parser: 'sugarss', // 铪？？？？解析器是sugarss???
+  plugins: {
+    'postcss-import': {},
+    'postcss-cssnext': {},
+    'cssnano': {}
+  }
+}
+```
+在webpack.config.js的添加时还要注意下面的几点
+> After setting up your postcss.config.js, add postcss-loader to your webpack.config.js. You can use it standalone or in conjunction with css-loader (recommended). Use it after css-loader and style-loader, but before other preprocessor loaders like e.g sass|less|stylus-loader, if you use any.
+
+这段文档的要点就是让你注意`postcss-loader`应该在`css-loader style-loader`之后，但是一定要在其他的预处理器`preprocessor loaders`之前，例如
+`sass|less|stylus-loader`。
+3. 官方给了一个推荐的配置代码
+
+```
+//依然是webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          'postcss-loader'
+        ]
+      }
+    ]
+  }
+}
+```
+本项目用的是`.src/css/main.scss`,只能尝试着将上述代码加到相应的位置
+```
+rules: [
+    ...
+	{
+		test: /\.scss$/,
+		use: [{
+			loader: "style-loader" // creates style nodes from JS strings
+		}, {
+			loader: "css-loader", options: { importLoaders: 1 }// translates CSS into CommonJS
+		}, {
+			loader: "postcss-loader"
+		}, {
+			loader: "sass-loader" // compiles Sass to CSS
+		}]
+	},
+	...
+```
+***
+下面的几点可都是官网文档没写的，只能自己踩一踩的坑……
+***
+4. 运行`npx webpack`,*连续报错*，不过是缺必备的module的错误,也就是缺postcss.config.js里面的`postcss-import postcss-cssnext cssnano sugarss` 。
+没办法，先`npm i -D 上面的四个模块名字`，依然报错，这次是语法错误
+![语法错误](http://p3tha6q4v.bkt.clouddn.com/18-2-12/21058876.jpg)
+(⊙v⊙)嗯？？？它说我不必要的大括号？？？我这标准的scss语法啊，又不是sass的语法(它省略了大括号和分号)，先Google一波这个错误。
+终于在在postcss的[issue](https://github.com/postcss/postcss/issues/1062)里面发现了蛛丝马迹,问题果然出在那个令我疑惑的`postcss.config.js`里面
+### 错误原因分析
+1. 错误的使用了[sugarss](https://github.com/postcss/sugarss)的解析器(这货和sass类似，没有大括号，所以它说我大括号错了，它的特点是Indent-based CSS syntax for PostCSS.SugarSS MIME-type is text/x-sugarss with .sss file extension.)，而我写的是scss语法。
+2. `postcss-loader`哪来的勇气确定大家都是用的`.sss`后缀的sugarss语法呢，还敢直接在文档的醒目位置写的`稀烂的postcss.config.js`，O__O "…
+3. 那么多的预编译的css语法，果然需要webpack打包工具啊，找到合适的loader去解析啊。
+
+注释掉`parser: 'sugarss',`这句代码，可以使用默认的解析器去解析了，正常运行了。
+不过查看代码，发现好像转换后的css有点小丑
+![不好看](http://p3tha6q4v.bkt.clouddn.com/18-2-12/6839932.jpg)
+
+仔细观察命令行，发现有线索，一个警告
+![警告](http://p3tha6q4v.bkt.clouddn.com/18-2-12/77557219.jpg)
+警告信息提示我说：postcss-cssnext发现有个冗余的`autoprefixer`插件在我的postcss插件里面，这个可能有不良影响，我应该移除它，因为它已经包括在了postcss-cssnext里面。
+
+webpack的警告说的很明白，postcss-cssnext是无辜的，而且我确定按照官网代码走的，没有安装`autoprefixer`插件，错误必然在剩下的两个插件里面了。
+```
+//修改后的postcss.config.js只剩下这些了
+module.exports = {
+  plugins: {
+    'postcss-import': {}, //1.它错了？
+    'postcss-cssnext': {}, //webpack告诉我它是清白的
+    'cssnano': {} //2.它错了？
+  }
+}
+```
+我选择了排除法：
+1. 先注释`'postcss-import': {},`，发现无法转换后的css代码不对，说明它是无辜的。
+2. 那么问题必然是最后一个插件，注释掉`'cssnano': {}`，终于完美了，而且代码很优美。
+![消除警告](http://p3tha6q4v.bkt.clouddn.com/18-2-12/85971803.jpg)
+
+本着打破砂锅问到底的精神，我搜了一下`cssnano`,在其[官网](http://cssnano.co/optimisations/autoprefixer/)看到了真实的错误原因，webpack很明智啊，诚不欺我，果然冗余插件了。
+![警告的原因](http://p3tha6q4v.bkt.clouddn.com/18-2-12/85971803.jpg)
+cssnano里面有`autoprefixer`导致了冗余。
+
+呼，总算，搞定了webpack的基本使用了，最简单的符合我目前技术栈的各种loader,plugin都会安装了。
+当然，还有无数的webpack的loader、plugin在前方等着我去探索……各种稀奇古怪的配置文件……痛并快乐着☺
 
