@@ -177,7 +177,8 @@ module.exports = {
 但是今天坐在电脑前面，回想代码，在前端工程话的道路上，scss、js、html都是被监视着(wacth)，src下一有风吹草动，就会把修改后的代码更新过去。
 - 目前使用的webpack可以完全自动化`scss、js`了，可我如果修改了src/index.html，dist/也无法获知我的修改啊
 - 然后我google一一会，发现了这货`Copy Webpack Plugin` 
-哎呀，是个`plugin`，现在webpack的四大基本概念都到齐了,前面搞了`entry output loder`，今天用一下`plugin`。
+
+哎呀，是个`plugin`，终于webpack的四大基本概念都到齐了,前面搞了`entry output loder`，今天用一下`plugin`。
 > loader 被用于转换某些类型的模块，而插件则可以用于执行范围更广的任务。插件的范围包括，从打包优化和压缩，一直到重新定义环境中的变量。
 基本安装
 ```
@@ -194,7 +195,7 @@ const config = {
   ]
 }
 ```
-[Copy Webpack Plugin的github](https://github.com/webpack-contrib/copy-webpack-plugin#to)给的代码，一开始把我搞蒙了，和webpack官网的不大一样啊。后来才发现原来是`module.exports = config;`
+[Copy Webpack Plugin的github](https://github.com/webpack-contrib/copy-webpack-plugin#to)给的代码，一开始把我搞蒙了，和webpack官网的代码不大一样啊。后来才发现原来用了`module.exports = config;`
 在我的小demo里使用的是
 ```
 plugins: [
@@ -222,8 +223,8 @@ output: {
 ![动态效果](http://p3tha6q4v.bkt.clouddn.com/18-2-12/50816812.jpg)
 ## 上一次提交的遗留的小问题
 上一次使用了`display： flex`把`ul>li`变成了横排，但是这玩意有兼容性，可以去[caniuse](https://caniuse.com/#feat=flexbox) 看一下,(*@ο@*) 哇～IE没有绿的哎，支持太差了。( ⊙ o ⊙ )！万一以后我项目搞大了，IE的用户、老安卓的用户想看我项目咋办呢，只能加一下前缀优化一下啦。
-有个挺牛的[在线的autoprefixer](https://autoprefixer.github.io/)，也可以去在线转换。不过既然使用了webpack就`Google webpack autoprefixer`
-遗憾的发现`autoprefixer`官方推荐使用`postcss-loader`
+有个挺牛的[在线的autoprefixer](https://autoprefixer.github.io/)，也可以去在线转换。
+既然使用了webpack就`Google webpack autoprefixer`，遗憾的发现`autoprefixer`官方推荐使用`postcss-loader`
 ![autoprefixer过期了](http://p3tha6q4v.bkt.clouddn.com/18-2-12/79391220.jpg)
 ### postcss-loader解决兼容性问题
 先吐槽一下，这货的文档也是稀烂……
@@ -249,6 +250,7 @@ module.exports = {
 
 这段文档的要点就是让你注意`postcss-loader`应该在`css-loader style-loader`之后，但是一定要在其他的预处理器`preprocessor loaders`之前，例如
 `sass|less|stylus-loader`。
+
 3. 官方给了一个推荐的配置代码
 
 ```
@@ -284,7 +286,8 @@ rules: [
 			loader: "sass-loader" // compiles Sass to CSS
 		}]
 	},
-	...
+   ...
+   ]
 ```
 ***
 下面的几点可都是官网文档没写的，只能自己踩一踩的坑……
