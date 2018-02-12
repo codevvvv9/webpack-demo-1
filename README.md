@@ -29,7 +29,8 @@ module.exports = {
 };
 ```
 ![基本使用](http://p3tha6q4v.bkt.clouddn.com/18-2-11/81006787.jpg)
-其中，第一行代码使用了Node的内置模块`path`，并且在它前面加上 `__dirname`这个全局变量(也就是第七行代码)。可以防止不同操作系统之间的文件路径问题，并且可以使相对路径按照预期工作。
+### path
+其中，第一行代码使用了Node的内置模块`path`,并且在它前面加上 `__dirname`这个全局变量(也就是第七行代码)。可以防止不同操作系统之间的文件路径问题，并且可以使相对路径按照预期工作。
 即使你的index.js内容为空，bundle.js里面也有一些基本的打包代码。
 
 3. 基本的使用
@@ -170,3 +171,53 @@ module.exports = {
 ***
 好啦～期待下次学习其他loader啦\(^o^)/~
 ***
+## 搞了一个html-loader，本想优化html的，可是实际使用中没有报错，但是好像没啥效果，比较尴尬
+## Copy Webpack Plugin这个插件很好用啊
+目前呢，前面的loader用的都很爽。在src目录下修改完了代码，一个npx webpack，刷新就可以看到效果了，体验很棒。
+但是今天坐在电脑前面，回想代码，在前端工程话的道路上，scss、js、html都是被监视着(wacth)，src下一有风吹草动，就会把修改后的代码更新过去。
+- 目前使用的webpack可以完全自动化`scss、js`了，可我如果修改了src/index.html，dist/也无法获知我的修改啊
+- 然后我google一一会，发现了这货`Copy Webpack Plugin` 
+哎呀，是个`plugin`，现在webpack的四大基本概念都到齐了,前面搞了`entry output loder`，今天用一下`plugin`。
+> loader 被用于转换某些类型的模块，而插件则可以用于执行范围更广的任务。插件的范围包括，从打包优化和压缩，一直到重新定义环境中的变量。
+基本安装
+```
+npm i -D copy-webpack-plugin
+```
+Copy Webpack Plugin配置文件(plugin的和loader的配置文件可不是一个套路。loader是在module.rules数组的每一个对象里面(即rules数组的每一个value)，而plugin是在module的plugins数组里面)
+```
+//依然在webpack.config.js
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+const config = {
+  plugins: [
+    new CopyWebpackPlugin([ ...patterns ], options)
+  ]
+}
+```
+[Copy Webpack Plugin的github](https://github.com/webpack-contrib/copy-webpack-plugin#to)给的代码，一开始把我搞蒙了，和webpack官网的不大一样啊。后来才发现原来是`module.exports = config;`
+在我的小demo里使用的是
+```
+plugins: [
+    new CopyWebpackPlugin([ {
+      //原来一个plugin就是一个对象啊，使用的时候实例化对象即可
+      from: 'src/index.html', //从src/index.html目录下复制
+      to: '../index.html',  //到dist/index.html
+      toType: 'file' //复制类型是文件
+    }], { copyUnmodified: true }) //把未修改的部分也复制过去
+  ]
+```
+这个插件可以实现很多功能，具体的细节看[这里](https://github.com/webpack-contrib/copy-webpack-plugin#to)
+### 关于目录的一个小问题
+上面代码为什么这么写呢` to: '../index.html',` ，试了好几遍发现没有报错，就是没有结果，最后搞明白了是路径的问题……
+还记得 四大基本概念的`output`里面的path吗，回头看一开始的[path](#path)
+```
+output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist/js/')
+},
+```
+项目的path是`dist/js`下，所以应该复制到上一级目录下`../`也就是`dist/`目录下了。
+### 至此可以看到预览链接里面的文字啦
+动态效果可以看下图
+![动态效果](http://p3tha6q4v.bkt.clouddn.com/18-2-12/50816812.jpg)
+
