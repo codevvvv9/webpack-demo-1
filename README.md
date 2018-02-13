@@ -327,7 +327,7 @@ module.exports = {
 ![消除警告](http://p3tha6q4v.bkt.clouddn.com/18-2-12/85971803.jpg)
 
 本着打破砂锅问到底的精神，我搜了一下`cssnano`,在其[官网](http://cssnano.co/optimisations/autoprefixer/)看到了真实的错误原因，webpack很明智啊，诚不欺我，果然冗余插件了。
-![警告的原因](http://p3tha6q4v.bkt.clouddn.com/18-2-12/85971803.jpg)
+![警告的原因](http://p3tha6q4v.bkt.clouddn.com/18-2-13/83651219.jpg)
 cssnano里面有`autoprefixer`导致了冗余。
 
 呼，总算，搞定了webpack的基本使用了，最简单的符合我目前技术栈的各种loader,plugin都会安装了。
